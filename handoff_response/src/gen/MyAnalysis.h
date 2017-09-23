@@ -43,12 +43,12 @@ public:
     /// divide a canvas
     void divideCanvas(TCanvas & c, int nx, int ny, std::string top_title) ;
 
-    const std::string& summary_filename()const{return m_summary_filename;}
+    const std::string& skim_filename() const {return m_skim_filename;}
 
 
 private:
 
-    std::string m_summary_filename;
+    std::string m_skim_filename;
     std::string m_cuts;
 
     //! the input file with the TTree

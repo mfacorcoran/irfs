@@ -8,6 +8,7 @@
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TPaveLabel.h"
+#include "TEventList.h"
 #include <cmath>
 #include <sstream>
 #include <iostream>
@@ -38,7 +39,7 @@ MyAnalysis::MyAnalysis(embed_python::Module& py)
 
    // then set of info
    py.getValue("Prune.cuts", m_cuts);
-   py.getValue("Prune.fileName", m_summary_filename);
+   py.getValue("Prune.fileName", m_skim_filename);
    py.getList("Prune.branchNames", m_branchNames);
 
    current_time();
@@ -53,13 +54,13 @@ void MyAnalysis::open_input_file() {
    std::cout << "Creating TChain(\""
              << m_tree_name 
              << "\") and adding files matching "
-             << m_summary_filename << std::endl;
+             << m_skim_filename << std::endl;
 
    m_input_tree = new TChain(m_tree_name.c_str());
    m_input_tree->SetMaxTreeSize(500000000000LL); // 500 gigs?
 
    // reprocessing the original file 
-   m_input_tree->Add(m_summary_filename.c_str());
+   m_input_tree->Add(m_skim_filename.c_str());
 
    if (m_input_tree==0) {
       std::ostringstream message;
@@ -73,7 +74,7 @@ void MyAnalysis::open_input_file() {
       std::ostringstream message;
       message << "MyAnalysis::open_input_file: "
               << "Input tree " << m_tree_name 
-              << " from file " << m_summary_filename
+              << " from file " << m_skim_filename
               << " has zero entries.";
       throw std::runtime_error(message.str());
    }
@@ -128,8 +129,8 @@ void MyAnalysis::makeCutTree() {
     }
 
     std::cout << "Copying cut tree, using cuts "<< m_cuts << std::endl;
-    if (!m_summary_filename.empty()) {
-        m_out = new TFile(m_summary_filename.c_str(), "recreate");
+    if (!m_skim_filename.empty()) {
+        m_out = new TFile(m_skim_filename.c_str(), "recreate");
     }
 
     m_input_tree->SetBranchStatus("*", 0);
@@ -137,10 +138,17 @@ void MyAnalysis::makeCutTree() {
          i!=m_branchNames.end(); ++i){
         m_input_tree->SetBranchStatus((*i).c_str(), 1);
     }
-    m_tree = m_input_tree->CopyTree(m_cuts.c_str());
-    m_tree->Write(); // save it
-    std::cout << "Wrote " << m_tree->GetEntries() << " events to file " << m_summary_filename << std::endl;
 
+    if (!m_skim_filename.empty()) {
+      m_tree = m_input_tree->CopyTree(m_cuts.c_str());
+      m_tree->Write(); // save it
+      std::cout << "Wrote " << m_tree->GetEntries() << " events to file " << m_skim_filename << std::endl;
+    } else {
+      m_tree = m_input_tree;
+      m_tree->Draw(">>list",m_cuts.c_str(),"goff");
+      TEventList *list = (TEventList*)gDirectory->Get("list");
+      m_tree->SetEventList(list);
+    }
 }
 
 #include <time.h>
