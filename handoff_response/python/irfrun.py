@@ -77,11 +77,11 @@ m = re.search('(.+?)\_(.+)\_V\d\_(.+)',target_dir)
 classver, classname, irftype = m.groups()
 
 # If IRFdefault
-if os.path.isfile('IRFdefault.py'):
-    irf_default = 'IRFdefault.py'
-else:
-    irf_default = os.path.join(os.environ['INST_DIR'],
-                               'irfs/handoff_response/python/IRFdefault.py')
+#if os.path.isfile('IRFdefault.py'):
+#    irf_default = 'IRFdefault.py'
+#else:
+#    irf_default = os.path.join(os.environ['INST_DIR'],
+#                               'irfs/handoff_response/python/IRFdefault.py')
 
 os.system('cp %s %s'%(irf_default,target_dir))
 os.chdir(target_dir)
@@ -89,7 +89,8 @@ os.chdir(target_dir)
 # Generate IRFs     
 makeirf(target_dir,irftype,overwrite=args.overwrite)
 
-if args.no_livetime: sys.exit(0)
+if args.no_livetime:
+    sys.exit(0)
 
 # Generate IRFs for each livetime bin
 livetime_bins = sorted(config['Livetime']['ngen'].keys())
