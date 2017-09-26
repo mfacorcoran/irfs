@@ -1,5 +1,8 @@
+import os
 import datetime
-import pyfits
+import numpy as np
+from astropy.io import fits
+
 
 def read_mappings(infile):
     """
@@ -27,12 +30,13 @@ def read_mappings(infile):
             mappings[2].append(tokens[2])
     return event_class, event_type
 
+
 def read_mappings_from_dict(index_mapping):
     """
     Read event_class and event_type mappings from a python dict.
     """
-    evclass = [[],[],[]]
-    evtype = [[],[],[]]
+    evclass = [[], [], []]
+    evtype = [[], [], []]
     for v in index_mapping['classes']:
         evclass[0].append(v[0])
         evclass[1].append(v[1])
@@ -45,36 +49,53 @@ def read_mappings_from_dict(index_mapping):
 
     return evclass, evtype
 
-def make_irf_index(index_mapping,outfile):
+
+def make_irf_index(index_mapping, outfile):
+
     if isinstance(index_mapping, dict):
         evclass, evtype = read_mappings_from_dict(index_mapping)
     else:
         evclass, evtype = read_mappings(index_mapping)
 
-    output = pyfits.HDUList()
-    output.append(pyfits.PrimaryHDU())
+    if os.path.isfile(outfile):
+        h_in = fits.open(outfile)
 
-    evclass_cols = [pyfits.Column('EVENT_CLASS', format='60A', unit=' ',
-                                  array=evclass[0]),
-                    pyfits.Column('BITPOSITION', format='1I', unit=' ',
-                                  array=evclass[1]),
-                    pyfits.Column('EVENT_TYPES', format='1J', unit='  ',
-                                  array=evclass[2])]
-    evclass_hdu = pyfits.new_table(evclass_cols)
-    evclass_hdu.name = "BITMASK_MAPPING"
+        for c in evclass[0]:
+            m = h_in['BITMASK_MAPPING'].data.field('EVENT_CLASS') == c
+            h_in['BITMASK_MAPPING'].data = h_in['BITMASK_MAPPING'].data[~m]
+
+        evclass[0] = np.concatenate((h_in['BITMASK_MAPPING'].data.field('EVENT_CLASS'),
+                                     evclass[0]))
+        evclass[1] = np.concatenate((h_in['BITMASK_MAPPING'].data.field('BITPOSITION'),
+                                     evclass[1]))
+        evclass[2] = np.concatenate((h_in['BITMASK_MAPPING'].data.field('EVENT_TYPES'),
+                                     evclass[2]))
+
+    output = fits.HDUList()
+    output.append(fits.PrimaryHDU())
+
+    evclass_cols = [fits.Column('EVENT_CLASS', format='60A', unit=' ',
+                                array=evclass[0]),
+                    fits.Column('BITPOSITION', format='1I', unit=' ',
+                                array=evclass[1]),
+                    fits.Column('EVENT_TYPES', format='1J', unit='  ',
+                                array=evclass[2])]
+    evclass_hdu = fits.BinTableHDU.from_columns(
+        evclass_cols, name='BITMASK_MAPPING')
     output.append(evclass_hdu)
 
-    evtype_cols = [pyfits.Column('EVENT_TYPE', format='60A', unit=' ',
-                                 array=evtype[0]),
-                   pyfits.Column('BITPOSITION', format='1I', unit=' ',
-                                 array=evtype[1]),
-                   pyfits.Column('EVENT_TYPE_PARTITION', format='20A', unit=' ',
-                                 array=evtype[2])]
-    evtype_hdu = pyfits.new_table(evtype_cols)
-    evtype_hdu.name = "EVENT_TYPE_MAPPING"
+    evtype_cols = [fits.Column('EVENT_TYPE', format='60A', unit=' ',
+                               array=evtype[0]),
+                   fits.Column('BITPOSITION', format='1I', unit=' ',
+                               array=evtype[1]),
+                   fits.Column('EVENT_TYPE_PARTITION', format='20A', unit=' ',
+                               array=evtype[2])]
+    evtype_hdu = fits.BinTableHDU.from_columns(
+        evtype_cols, name='EVENT_TYPE_MAPPING')
     output.append(evtype_hdu)
 
     output.writeto(outfile, clobber=True)
 
+
 if __name__ == '__main__':
-    make_irf_index('irf_index.txt','irf_index_candidate.fits')
+    make_irf_index('irf_index.txt', 'irf_index_candidate.fits')
