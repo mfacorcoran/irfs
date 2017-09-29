@@ -4,6 +4,7 @@
 @brief Generate python setup files and directory structure for
 makeirf/makefits.
 """
+from __future__ import absolute_import, division, print_function
 
 import yaml
 import re
@@ -169,7 +170,6 @@ def main():
     class_version, classnames, typenames = get_class_types_from_xml(
         args.classdefs)
 
-    irf_version = config['irf_version']
     config['MC'] = extract_generated_events(config['MC'], config['meritdir'])
     if 'Livetime' in config:
         config['Livetime']['MC'] = extract_generated_events(config['Livetime']['MC'],
@@ -178,11 +178,9 @@ def main():
     
     for classname in classnames:
         for typename in typenames:
-            #irfname = '%s_%s_%s_%s' % (class_version, classname,
-            #                           irf_version, typename)
             irfname = '%s_%s_%s' % (class_version, classname,
                                     typename)
-            print 'Doing', irfname
+            print('Doing', irfname)
             dirname = os.path.join(target_dir, irfname)
             makedir(dirname)
             config['irf_name'] = str(irfname)
@@ -204,7 +202,7 @@ def main():
             #irfname = '%s_%s_%s_%s' % (
             #    class_version, classname, irf_version, typename)
             irfname = '%s_%s_%s' % (class_version, classname, typename)
-            print 'Doing', irfname, ltbin
+            print('Doing', irfname, ltbin)
             dirname = os.path.join(target_dir, irfname)
             f = open(os.path.join(dirname, 'setup_%s.py' % ltbin), 'w')
             f.write(makesetup(class_version, classname,
