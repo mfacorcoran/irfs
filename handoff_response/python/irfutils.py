@@ -18,6 +18,7 @@ import argparse
 import itertools
 import numpy as np
 import ROOT
+from astropy.io import fits
 
 
 def get_branches(aliases):
@@ -216,7 +217,7 @@ class read_aeff(object):
     def get_loge_bin_bounds(self, i):
         if i < 0 or i >= self.n_e:
             return -1
-        return (log10(self.e_lo[i]), log10(self.e_hi[i]))
+        return (np.log10(self.e_lo[i]), np.log10(self.e_hi[i]))
 
     def get_e_bin_center(self, i):
         if i < 0 or i >= self.n_e:
@@ -381,7 +382,7 @@ class corr_fit(object):
                             self.nsims[si] / (self.sim_lemax[si] -
                                               self.sim_lemin[si]) * (bin_lemax - bin_lemin)
                     ndetected = nevts * this / 6.  # ndet=nsim*efficiency
-                    err = sqrt(ndetected) / ndetected * this / base_aeff
+                    err = np.sqrt(ndetected) / ndetected * this / base_aeff
                     g.SetPointError(li, 0, err)
                     # if i==2 or i==40:
                     # print 'point',i,':',self.ltimes[li],'ndet,nsim',ndetected,nevts,'aeff,ratio',this,this/base_aeff,'sqrt(n)/n,err',sqrt(ndetected)/ndetected,err,'E',self.base_aeff.get_e_bin_center(self.ebins[i])
@@ -403,9 +404,9 @@ class corr_fit(object):
             fitted_m = func.GetParameter(0)
             fitted_q = lffunc.intercept(fitted_m)
             print('>>>>>', fitted_m, fitted_q)
-            self.g_p0.SetPoint(i, log10(center), fitted_m)
-            self.g_p1.SetPoint(i, log10(center), fitted_q)
-            w = 0  # (log10(bounds[1])-log10(bounds[0]))/sqrt(12)
+            self.g_p0.SetPoint(i, np.log10(center), fitted_m)
+            self.g_p1.SetPoint(i, np.log10(center), fitted_q)
+            w = 0  # (np.log10(bounds[1])-np.log10(bounds[0]))/np.sqrt(12)
             error_m = func.GetParError(0)
             # error_q=abs(error_m/fitted_m*fitted_q)
             error_q = abs(error_m * fitted_q / fitted_m * self.av_ltime)
@@ -418,7 +419,7 @@ class corr_fit(object):
                 fits_p1.append(func.GetParameter(0))
 
             # Draw on c3 canvas
-            j = i / 16
+            j = i // 16
 
             if j >= len(self.c3):
                 continue
@@ -572,9 +573,9 @@ class corr_fit(object):
                 func.SetLineColor(2)
                 func.SetLineWidth(1)
                 # store fit parameters in global graphs
-                g_a_p1.SetPoint(i, log10(center), func.GetParameter(0))
-                g_a_p0.SetPoint(i, log10(center), func.GetParameter(1))
-                w = 0  # (log10(bounds[1])-log10(bounds[0]))/sqrt(12)
+                g_a_p1.SetPoint(i, np.log10(center), func.GetParameter(0))
+                g_a_p0.SetPoint(i, np.log10(center), func.GetParameter(1))
+                w = 0  # (np.log10(bounds[1])-np.log10(bounds[0]))/np.sqrt(12)
                 g_a_p1.SetPointError(i, w, func.GetParError(0))
                 g_a_p0.SetPointError(i, w, func.GetParError(1))
                 # persistency
