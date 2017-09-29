@@ -39,6 +39,6 @@ else:
                  binaryCxts = [[pruneBin, progEnv], [makeirfBin, progEnv],
                                [makefitsBin, progEnv]],
                  pfiles = listFiles(['pfiles/*.par']),
-                 python = ['python/IRFdefault.py'],
+                 python = ['python/IRFdefault.py','python/irfutils.py'],
                  includes = listFiles(['handoff_response/*.h']),
                  data = listFiles(['data/*'], recursive = True))
