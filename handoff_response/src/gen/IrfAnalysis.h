@@ -30,7 +30,7 @@ public:
 
    /// do the fits, optionally make plots and write out parameters to
    /// a root file
-   void fit(bool make_plots=false, std::string output_type="ps");
+   void fit(bool make_plots=false);
 
    std::string name() const{
       return m_name;
@@ -101,7 +101,9 @@ private:
    std::string m_name;
    std::string m_output_dir;
    std::string m_filename_root;
-   
+   bool m_make_plots;
+   std::string m_output_type;
+
    /// Data members to allow configurable selection of merit variables
    /// for reconstructed direction cosines and energy.
    std::string m_bestXDir;

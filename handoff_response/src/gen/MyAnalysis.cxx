@@ -17,7 +17,8 @@
 #include "embed_python/Module.h"
 
 MyAnalysis::MyAnalysis(embed_python::Module& py)
-   : m_tree_name("MeritTuple"), m_out(0) {
+  : m_tree_name("MeritTuple"), 
+    m_tree(), m_input_tree(), m_out(0), m_list() {
    // get file information from input description 
    // first, file list
    
@@ -146,8 +147,8 @@ void MyAnalysis::makeCutTree() {
     } else {
       m_tree = m_input_tree;
       m_tree->Draw(">>list",m_cuts.c_str(),"goff");
-      TEventList *list = (TEventList*)gDirectory->Get("list");
-      m_tree->SetEventList(list);
+      m_list = (TEventList*)gDirectory->Get("list");
+      m_tree->SetEventList(m_list);
     }
 }
 

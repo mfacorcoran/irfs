@@ -19,6 +19,7 @@
 
 #include "TFile.h"
 #include "TTree.h"
+#include "TEventList.h"
 
 #include <iomanip>
 #include <fstream>
@@ -35,6 +36,8 @@ IrfAnalysis::IrfAnalysis(std::string output_folder,
                          embed_python::Module & py) 
    : MyAnalysis(py),
      m_binner(py),  // initilize the binner
+     m_make_plots(true),
+     m_output_type("pdf"),
      m_output_dir(output_folder),
      m_bestXDir("CTBBestXDir"),
      m_bestYDir("CTBBestYDir"),
@@ -48,6 +51,13 @@ IrfAnalysis::IrfAnalysis(std::string output_folder,
    py.getValue("logFile", logfile);
    py.getValue("selectionName", selectionName);
    
+   try {
+     int make_plots = 1;
+     py.getValue("makePlots", make_plots);
+     m_make_plots = bool(make_plots);
+     py.getValue("outputType", m_output_type);
+   } catch (std::invalid_argument &) { }
+
    m_filename_root = selectionName;
    m_outputfile = selectionName + ".root";
 
@@ -140,9 +150,19 @@ void IrfAnalysis::project(embed_python::Module & py) {
    double minlogE(1e6), maxlogE(0);
    double minzdir(1), maxzdir(-1);
 
-   for(int i = 0; i < tree().GetEntries(); i++) {
+   int nentries(0);
+   if(list() != NULL) 
+     nentries = list()->GetN();
+   else
+     nentries = tree().GetEntries();
 
-      tree().GetEvent(i);
+   for(int i = 0; i < nentries; i++) {
+
+      int ii = i;
+      if(list() != NULL) {
+	ii = list()->GetEntry(i);
+      }
+      tree().GetEvent(ii);
       if (EvtRun != lastrun) {
          ++nruns;
          lastrun = EvtRun;
@@ -203,7 +223,10 @@ void IrfAnalysis::project(embed_python::Module & py) {
    
    m_hist_file->Write();}
 
-void IrfAnalysis::fit(bool make_plots, std::string output_type) {
+void IrfAnalysis::fit(bool make_plots) {
+
+   make_plots = make_plots || m_make_plots;
+   const std::string& output_type = m_output_type;
    m_psf->fit(); 
    m_fisheye->fit(); 
    m_disp->fit();
