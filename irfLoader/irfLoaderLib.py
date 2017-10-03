@@ -8,9 +8,10 @@ def generate(env, **kw):
     env.Tool('st_facilitiesLib')
     env.Tool('irfInterfaceLib')
     env.Tool('dc1aResponseLib')
-    env.Tool('handoff_responseLib')
     env.Tool('testResponseLib')
-    env.Tool('latResponseLib')
+    if env.get('CONTAINERNAME', '') != 'ScienceTools_User':
+        env.Tool('handoff_responseLib')
+        env.Tool('latResponseLib')
 
 def exists(env):
     return 1
