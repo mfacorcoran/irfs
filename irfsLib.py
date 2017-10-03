@@ -3,7 +3,7 @@ def generate(env, **kw):
     env.Tool('irfUtilLib')
     env.Tool('irfLoaderLib')
     env.Tool('testResponseLib')
-    if baseEnv.get('CONTAINERNAME','') != 'ScienceTools_User':
+    if env.get('CONTAINERNAME','') != 'ScienceTools_User':
         env.Tool('dc1aResponseLib')
         env.Tool('handoff_responseLib')
 
