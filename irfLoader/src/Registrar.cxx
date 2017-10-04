@@ -18,7 +18,9 @@
 
 #include "irfInterface/IrfRegistry.h"
 
-#include "dc1aResponse/IrfLoader.h"
+#ifndef ST_USER
+# include "dc1aResponse/IrfLoader.h"
+#endif
 #include "latResponse/IrfLoader.h"
 #include "testResponse/IrfLoader.h"
 
@@ -41,8 +43,9 @@ Registrar::Registrar() {
    }
    
    irfInterface::IrfRegistry & registry(irfInterface::IrfRegistry::instance());
-
+#ifndef ST_USER
    registry.registerLoader(new dc1aResponse::IrfLoader());
+#endif
    registry.registerLoader(new latResponse::IrfLoader());
    registry.registerLoader(new testResponse::IrfLoader());
 
