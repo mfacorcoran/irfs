@@ -2,6 +2,7 @@
 
 import os
 import re
+import yaml
 import sys
 import itertools
 import argparse
@@ -21,6 +22,32 @@ from IrfConsolidator import *
 from make_irf_index import make_irf_index
 
 
+def make_valid_selections(infile, outdir):
+
+    valid = yaml.load(open(infile))
+    
+    # Construct a dictionary of valid evclass selections for a given base
+    # evclass selection
+    valid_evclass_bits = valid['evclass'].copy()
+    valid_evtype_bits = valid['evtype'].copy()
+
+    # include all two class permutations
+    for k0, v0 in valid['evclass'].items():
+        for k1, v1 in valid['evclass'].items():
+            valid_evclass_bits[k0 | k1] =  v0 | v1
+
+    np.savetxt(os.path.join(outdir,'valid_evclass_selections.txt'),
+               sorted(valid_evclass_bits.items()),fmt='%s',delimiter=',')
+
+    # Loop over all permutations of PSF and EDISP
+    for i in range(1,15):
+        valid_evtype_bits[i<<2] = i<<2
+        valid_evtype_bits[i<<6] = i<<6
+
+    np.savetxt(os.path.join(outdir,'valid_evtype_selections.txt'),
+               sorted(valid_evtype_bits.items()),fmt='%s',delimiter=',')
+
+    
 def get_class_types_from_xml(xmlfile):
     xmldoc = minidom.parse(xmlfile)
     class_version = str(xmldoc.getElementsByTagName(
@@ -71,6 +98,9 @@ parser.add_argument('--class_types', default=None,
 parser.add_argument('--classdefs', default=None, required=True,
                     help='Set the evtclassdefs file.  This will be used to populate the list '
                     'of valid class/type combinations.')
+
+parser.add_argument('--valid_selections', default=None, required=True,
+                    help='Set the YAML file containing class and type membership information.')
 
 #parser.add_argument('files', nargs='*')
 
@@ -151,6 +181,8 @@ edisp_dir = os.path.join(bcf_dir, 'edisp')
 mkdir(os.path.join(bcf_dir, 'ea'))
 mkdir(os.path.join(bcf_dir, 'psf'))
 mkdir(os.path.join(bcf_dir, 'edisp'))
+
+make_valid_selections(args.valid_selections,bcf_dir)
 
 inst_caldb = os.path.join(inst_dir, 'irfs/caldb/CALDB')
 
