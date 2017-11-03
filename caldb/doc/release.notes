@@ -6,6 +6,7 @@
   $Id$
   EOH
 
+ caldb-07-02-00 03-Nov-2017 mdwood Add functionality for generating valid selections table.
  caldb-07-01-00 29-Sep-2017 mdwood Cleanup and refactoring of scripts for generating CALDB.
  caldb-07-00-03 21-Apr-2015 jchiang add text files with valid evtype and evclass down selections
  caldb-07-00-02 20-Feb-2015 jchiang P8R2 fixes for EFFICIENCY_PARAMS ext column name; P7* fixes for F/B efficiency params and psf scaling
