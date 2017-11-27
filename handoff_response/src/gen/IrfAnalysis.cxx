@@ -19,6 +19,7 @@
 
 #include "TFile.h"
 #include "TTree.h"
+#include "TEventList.h"
 
 #include <iomanip>
 #include <fstream>
@@ -35,6 +36,8 @@ IrfAnalysis::IrfAnalysis(std::string output_folder,
                          embed_python::Module & py) 
    : MyAnalysis(py),
      m_binner(py),  // initilize the binner
+     m_make_plots(true),
+     m_output_type("pdf"),
      m_output_dir(output_folder),
      m_bestXDir("CTBBestXDir"),
      m_bestYDir("CTBBestYDir"),
@@ -48,6 +51,13 @@ IrfAnalysis::IrfAnalysis(std::string output_folder,
    py.getValue("logFile", logfile);
    py.getValue("selectionName", selectionName);
    
+   try {
+     int make_plots = 1;
+     py.getValue("makePlots", make_plots);
+     m_make_plots = bool(make_plots);
+     py.getValue("outputType", m_output_type);
+   } catch (std::invalid_argument &) { }
+
    m_filename_root = selectionName;
    m_outputfile = selectionName + ".root";
 
@@ -93,7 +103,13 @@ IrfAnalysis::IrfAnalysis(std::string output_folder,
 }
 
 void IrfAnalysis::project(embed_python::Module & py) {
-   open_input_file();
+
+  // If skim file is undefined load events directly from the TChain
+  if(skim_filename().empty())
+    makeCutTree();
+  else
+    open_input_file();
+
    // for the histograms
    TFile * m_hist_file= new TFile(summary_filename().c_str(), "recreate");
    std::cout << " writing irf summary plots to " 
@@ -114,25 +130,39 @@ void IrfAnalysis::project(embed_python::Module & py) {
    m_fisheye = new FisheyePlots(*this,out(),py);
 
    std::cout << "Selecting columns in tree " << tree().GetName() << std::endl;
-   TreeWrapper mytree(&tree()); // sets current TTree
-   TreeWrapper::Leaf // create TLeaf-wrappers from the current TTree 
-      McEnergy("McEnergy")
-      , CTBBestEnergy(m_bestEnergy)
-      , McXDir("McXDir")
-      , McYDir("McYDir")
-      , McZDir("McZDir")
-      , fitxdir(m_bestXDir)
-      , fitydir(m_bestYDir)
-      , fitzdir(m_bestZDir)
-      , Tkr1FirstLayer("Tkr1FirstLayer")
-      , EvtRun("EvtRun" ) // to count runs
-      ;
+   unsigned EvtRun(0);
+   float McEnergy(0.0), Tkr1FirstLayer(0.0);
+   double BestEnergy(0.0), McXDir(0.0), McYDir(0.0), McZDir(0.0),
+     BestXDir(0.0), BestYDir(0.0), BestZDir(0.0);
+
+   tree().SetBranchAddress("EvtRun", &EvtRun);
+   tree().SetBranchAddress("McEnergy", &McEnergy);
+   tree().SetBranchAddress("Tkr1FirstLayer", &Tkr1FirstLayer);
+   tree().SetBranchAddress(m_bestEnergy.c_str(), &BestEnergy);
+   tree().SetBranchAddress("McXDir", &McXDir);
+   tree().SetBranchAddress("McYDir", &McYDir);
+   tree().SetBranchAddress("McZDir", &McZDir);
+   tree().SetBranchAddress(m_bestXDir.c_str(), &BestXDir);
+   tree().SetBranchAddress(m_bestYDir.c_str(), &BestYDir);
+   tree().SetBranchAddress(m_bestZDir.c_str(), &BestZDir);
+   
    int lastrun(0), selected(0), total(0), nruns(0);
    double minlogE(1e6), maxlogE(0);
    double minzdir(1), maxzdir(-1);
 
-   for (TreeWrapper::Iterator it = mytree.begin(); 
-        it != mytree.end(); ++it, ++total) {
+   int nentries(0);
+   if(list() != NULL) 
+     nentries = list()->GetN();
+   else
+     nentries = tree().GetEntries();
+
+   for(int i = 0; i < nentries; i++) {
+
+      int ii = i;
+      if(list() != NULL) {
+	ii = list()->GetEntry(i);
+      }
+      tree().GetEvent(ii);
       if (EvtRun != lastrun) {
          ++nruns;
          lastrun = EvtRun;
@@ -157,32 +187,26 @@ void IrfAnalysis::project(embed_python::Module & py) {
       // calculate theta, phi components of the error
       HepGeom::Vector3D<double>
          mc_dir(McXDir, McYDir, McZDir), 
-	fit_dir(fitxdir, fitydir, fitzdir);
-
+   	fit_dir(BestXDir, BestYDir, BestZDir);
 
       //Approximated version to check theta- and phi- projections
       HepGeom::Vector3D<double> 
-	mc_error(mc_dir - fit_dir), zhat(0, 0, 1),
-	phi_hat = zhat.cross(mc_dir).unit(),
-	theta_hat = phi_hat.cross(mc_dir).unit();
+   	mc_error(mc_dir - fit_dir), zhat(0, 0, 1),
+   	phi_hat = zhat.cross(mc_dir).unit(),
+   	theta_hat = phi_hat.cross(mc_dir).unit();
 
       double phi_err = mc_error*phi_hat,
-	theta_err = mc_error*theta_hat;
-	//	diff = sqrt(sqr(theta_err) + sqr(phi_err));
-
+   	theta_err = mc_error*theta_hat;
+   	//	diff = sqrt(sqr(theta_err) + sqr(phi_err));
 
       //exact version
       double diff=mc_dir.angle(fit_dir);
       
       // choose one of the following
-      double measured_energy = CTBBestEnergy, 
+      double measured_energy = BestEnergy, 
          mc_energy = McEnergy,
          //ratio =measured_energy/mc_energy,
          dsp = measured_energy/mc_energy - 1;
-
-      // std::cout << Tkr1FirstLayer << " " 
-      // 		<< front << " " << m_front_only_psf_scaling
-      // 		<< std::endl;
 
       m_fisheye->fill(theta_err, McEnergy, McZDir);
       m_psf->fill(diff, McEnergy, McZDir);
@@ -190,16 +214,19 @@ void IrfAnalysis::project(embed_python::Module & py) {
       m_aeff->fill(mc_energy, McZDir, front, total);
       m_phi_dep->fill(McXDir, McYDir, McEnergy, McZDir);
    }
+     
    out() << "\nFound " << nruns <<" run numbers" 
          << " and " << selected<< "/" 
-         <<  mytree.size() << " events" <<  std::endl;
+         <<  tree().GetEntries() << " events" <<  std::endl;
    out() << "Log energy range: " << minlogE << " to " << maxlogE << std::endl;
    out() << "McZDir range: " << minzdir << " to " << maxzdir << std::endl;
    
-   m_hist_file->Write();
-}
+   m_hist_file->Write();}
 
-void IrfAnalysis::fit(bool make_plots, std::string output_type) {
+void IrfAnalysis::fit(bool make_plots) {
+
+   make_plots = make_plots || m_make_plots;
+   const std::string& output_type = m_output_type;
    m_psf->fit(); 
    m_fisheye->fit(); 
    m_disp->fit();

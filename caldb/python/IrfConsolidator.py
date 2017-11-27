@@ -40,7 +40,8 @@ class IrfConsolidator(object):
             hdu.header['DETNAM'] = evtype
             hdu.header['INSTRUME'] = self._instrument
             hdu.header['CBD10001'] = 'VERSION(%s)' % self.irf_name
-            if 'PSFVER' in hdu.header: hdu.header['PSFVER'] = 3
+            if 'PSFVER' in hdu.header:
+                hdu.header['PSFVER'] = 3
 
     def get_input_files(self, component, evtypes):
         irf_files = []
