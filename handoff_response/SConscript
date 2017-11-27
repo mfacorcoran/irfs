@@ -1,7 +1,7 @@
 # -*- python -*-
 # $Id$
 # Authors: Toby Burnett <tburnett@u.washington.edu>, J. Chiang <jchiang@slac.stanford.edu>
-# Version: handoff_response-06-01-02
+# Version: handoff_response-06-02-00
 
 Import('baseEnv')
 if baseEnv.get('CONTAINERNAME','') != 'ScienceTools_User':
@@ -40,5 +40,6 @@ if baseEnv.get('CONTAINERNAME','') != 'ScienceTools_User':
                      binaryCxts = [[pruneBin, progEnv], [makeirfBin, progEnv],
                                    [makefitsBin, progEnv]],
                      pfiles = listFiles(['pfiles/*.par']),
+                     python = ['python/IRFdefault.py','python/irfutils.py'],
                      includes = listFiles(['handoff_response/*.h']),
                      data = listFiles(['data/*'], recursive = True))

@@ -17,10 +17,8 @@ int main(int argc, char* argv[]) {
    Setup s(argc, argv, false);  // will cd to current folder.
    
    std::string folder(s.root());
-   bool make_plots(true);
-   
    IrfAnalysis irf_analysis(folder, *s.py());
-   irf_analysis.fit(make_plots);
+   irf_analysis.fit();
 
    return ret;
 }
