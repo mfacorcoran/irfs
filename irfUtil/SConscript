@@ -7,8 +7,15 @@ Import('listFiles')
 progEnv = baseEnv.Clone()
 libEnv = baseEnv.Clone()
 
-irfUtilLib = libEnv.StaticLibrary('irfUtil',
-                                  listFiles(['src/*.cxx', 'src/*.c']))
+if libEnv.get('CONTAINERNAME','') != 'ScienceTools_User':
+    irfUtilLib = libEnv.StaticLibrary('irfUtil',
+                                      listFiles(['src/*.cxx', 'src/*.c']))
+else:
+    irfUtilLib = libEnv.StaticLibrary('irfUtil',
+                                      listFiles(['src/H*.cxx', 
+                                                 'src/EventTypeMapper.cxx',
+                                                 'src/IrfHdus.cxx', 
+                                                 'src/Util.cxx','src/*.c']))
 
 progEnv.Tool('irfUtilLib')
 

@@ -7,10 +7,11 @@ def generate(env, **kw):
     env.Tool('facilitiesLib')
     env.Tool('st_facilitiesLib')
     env.Tool('irfInterfaceLib')
-    env.Tool('dc1aResponseLib')
-    env.Tool('handoff_responseLib')
-    env.Tool('testResponseLib')
     env.Tool('latResponseLib')
+    env.Tool('testResponseLib')
+    if env.get('CONTAINERNAME', '') != 'ScienceTools_User':
+        env.Tool('handoff_responseLib')
+        env.Tool('dc1aResponseLib')
 
 def exists(env):
     return 1
