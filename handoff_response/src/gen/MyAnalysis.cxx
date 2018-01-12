@@ -23,7 +23,7 @@ MyAnalysis::MyAnalysis(embed_python::Module& py)
    // get file information from input description 
    // first, file list
    
-   //TFormula::SetMaxima(2000,2000,2000);
+   TFormula::SetMaxima(2000,2000,2000);
 
    py.getList("Data.files", m_files);
    std::cout << "Reading from " << m_files.size() 
