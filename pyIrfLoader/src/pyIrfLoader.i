@@ -88,7 +88,7 @@
       astro::SkyDir appDir = self->appDir(energy, srcDir, scZAxis, scXAxis);
       double separation = appDir.difference(srcDir)*180./M_PI;
       double phi = CLHEP::RandFlat::shoot()*360.;
-      return std::make_pair<double, double>(separation, phi);
+      return std::make_pair(separation, phi);
    }
 
    std::vector<double> value(const std::vector<double>& separation, double energy, double theta, 
