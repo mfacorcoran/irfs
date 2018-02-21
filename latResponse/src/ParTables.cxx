@@ -113,7 +113,7 @@ setPars(size_t ilogE, size_t icosth, const std::vector<double> & pars) {
    }
 }
 
-std::vector<double> ParTables::params(size_t indx) const { 
+std::vector<double> ParTables::params(size_t indx) { 
 
   std::map<size_t, std::string>::const_iterator itr = m_parIndices.find(indx);
   if(itr == m_parIndices.end())
