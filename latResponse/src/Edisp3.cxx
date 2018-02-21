@@ -203,7 +203,7 @@ void Edisp3::readScaling(const std::string & fitsfile,
 }
 
 void Edisp3::setParams(size_t indx, const std::vector<double>& params) {  
-  interpolator().setParams(indx,const_cast<std::vector<double>&>(params));
+  const interpolator().setParams(indx,params);
   std::vector<double> p(m_parTables.logEnergies().size()*
 			m_parTables.costhetas().size());
   const std::vector<double>& x = interpolator().energies();
