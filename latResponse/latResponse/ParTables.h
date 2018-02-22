@@ -67,7 +67,7 @@ public:
    
    void setPars(size_t ilogE, size_t icosth, const std::vector<double> & pars);
 
-   std::vector<double> params(size_t indx) const;
+   std::vector<double> params(size_t indx);
 
    void setParams(size_t indx, const std::vector<double>& params);
 
