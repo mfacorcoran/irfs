@@ -1,0 +1,7 @@
+infile,s,a,"psf_P8R3_TRANSIENT015S_V2_EDISP.fits",,,"Name of file containing dataset"
+cif,s,a,"/nfs/slac/g/ki/ki20/cta/mdwood/fermi/irf_devel/P8R3_V2/CALDB/data/glast/lat/bcf/../caldb.indx",,,"Name of Calibration Index File"
+quality,i,a,0,,,"Quality value for the dataset being entered"
+chatter,i,h,0,,,"Chatter flag"
+editc,b,a,no,,,"Change conflicting dataset's Quality value to 5 (Y/N)?"
+newentries,i,hl,12,,,"[output] Number of new entries recorded"
+mode,s,h,"ql",,,
