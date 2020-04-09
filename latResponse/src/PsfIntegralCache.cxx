@@ -136,7 +136,7 @@ psfIntegral(double psi, double sigma, double gamma) const {
    int ierr(0);
 
    double firstIntegral(0);
-   if (psi < roi_radius) {
+   if ( mum < 0.99 ) {
       PsfIntegrand1 psfIntegrand1(sigma, gamma);
       firstIntegral = 
          st_facilities::GaussianQuadrature::dgaus8(psfIntegrand1, mum,
