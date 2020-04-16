@@ -301,7 +301,7 @@ class corr_fit(object):
         self.sim_lemin = []
         self.sim_lemax = []
         # any other setup to do
-        ROOT.gStyle.SetOptFit(0111)
+        ROOT.gStyle.SetOptFit(111) #was 0111 but in python 3 that is an octal number 
         ROOT.gROOT.SetStyle('Plain')
 
     def add_aeff_file(self, aeff_fname_and_ltime, sim_ev_data=[]):
